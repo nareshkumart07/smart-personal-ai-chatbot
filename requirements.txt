@@ -1,0 +1,7 @@
+fastapi[standard]
+python-multipart
+faiss-cpu
+google-genai
+python-dotenv
+pypdf
+numpy
