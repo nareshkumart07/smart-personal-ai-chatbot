@@ -26,6 +26,24 @@
 </head>
 <body class="bg-slate-50 text-slate-800 h-[100dvh] overflow-hidden flex">
 
+    <!-- Password Protection Overlay -->
+    <div id="password-overlay" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Access Restricted</h2>
+            <p class="text-slate-500 mb-6 text-sm">Please enter the password to access the Nexus AI RAG Console.</p>
+            <form id="password-form" class="space-y-4">
+                <input type="password" id="app-password" placeholder="Enter Password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-center tracking-widest" required>
+                <button type="submit" class="w-full bg-blue-600 text-white font-medium rounded-lg py-3 hover:bg-blue-700 transition duration-200 shadow-sm">
+                    Unlock Access
+                </button>
+                <p id="password-error" class="text-red-500 text-sm hidden mt-2">Incorrect password. Please try again.</p>
+            </form>
+        </div>
+    </div>
+
     <!-- Mobile Overlay Backdrop -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 z-20 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
 
@@ -134,6 +152,24 @@
     </main>
 
     <script>
+        // --- Password Protection Logic ---
+        document.getElementById('password-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pwd = document.getElementById('app-password').value;
+            const overlay = document.getElementById('password-overlay');
+            const errorText = document.getElementById('password-error');
+
+            if (pwd === 'Nick@123') {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300); // Wait for the fade out transition
+            } else {
+                errorText.classList.remove('hidden');
+                document.getElementById('app-password').value = '';
+            }
+        });
+
         // API Base URL Setup
         const API_BASE_URL = window.location.port === '8000' ? '' : 'http://127.0.0.1:8000';
 
