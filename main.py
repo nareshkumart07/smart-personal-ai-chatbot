@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import Rag_Model.rag_core as rag_core
+import rag_core as rag_core
 
 app = FastAPI(title="Multimodal RAG API")
 
