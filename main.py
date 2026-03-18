@@ -1,7 +1,7 @@
 import os
 import shutil
 from typing import List
-from fastapi import FastAPI, UploadFile, Form, HTTPException, File
+from fastapi import FastAPI, UploadFile, Form, HTTPException, File, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -22,6 +22,14 @@ app.add_middleware(
 TEMP_DIR = "temp_uploads"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
+# Secure backend password configuration
+APP_PASSWORD = os.getenv("APP_PASSWORD")
+
+def verify_password(x_app_password: str = Header(None)):
+    """Dependency to check the password in headers for secure routes."""
+    if not x_app_password or x_app_password != APP_PASSWORD:
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid Password")
+
 class TextUpload(BaseModel):
     name: str
     text: str
@@ -39,7 +47,7 @@ async def serve_frontend():
     with open("index.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
-@app.post("/api/upload/text")
+@app.post("/api/upload/text", dependencies=[Depends(verify_password)])
 async def upload_text(payload: TextUpload):
     """Endpoint to upload raw text."""
     try:
@@ -48,7 +56,7 @@ async def upload_text(payload: TextUpload):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/upload/file")
+@app.post("/api/upload/file", dependencies=[Depends(verify_password)])
 async def upload_file(files: List[UploadFile] = File(...)):
     """Endpoint to upload multiple PDFs, Images, Audio, and Video files."""
     total_items = 0
@@ -76,7 +84,7 @@ async def upload_file(files: List[UploadFile] = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/ask")
+@app.post("/api/ask", dependencies=[Depends(verify_password)])
 async def ask_question(query: Query):
     """Endpoint to ask a question to the RAG system using Groq."""
     try:
@@ -85,13 +93,13 @@ async def ask_question(query: Query):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/documents")
+@app.get("/api/documents", dependencies=[Depends(verify_password)])
 async def get_documents():
     """Returns a list of unique document names currently in the database."""
     docs = list(set([meta["name"] for meta in rag_core.metadata_store.values()]))
     return {"documents": docs}
 
-@app.delete("/api/data")
+@app.delete("/api/data", dependencies=[Depends(verify_password)])
 async def delete_data(req: DeleteRequest):
     """Deletes specific documents by name, or all data if list is empty."""
     try:
@@ -104,7 +112,7 @@ async def delete_data(req: DeleteRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/stats")
+@app.get("/api/stats", dependencies=[Depends(verify_password)])
 async def get_stats():
     """Returns database stats."""
     return {"total_documents_indexed": rag_core.faiss_index.ntotal}
