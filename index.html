@@ -17,7 +17,6 @@
         .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
         
-        /* Custom Scrollbar for chat */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -44,12 +43,11 @@
         </div>
     </div>
 
-    <!-- Mobile Overlay Backdrop -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 z-20 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
 
-    <!-- Sidebar / Ingestion Area (Sliding Drawer on Mobile) -->
+    <!-- Sidebar / Ingestion Area -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 w-[85vw] max-w-[320px] md:max-w-none md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col h-[100dvh] shadow-2xl md:shadow-sm z-30 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out">
-        <div class="p-5 md:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
+        <div class="p-5 md:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white shrink-0">
             <h1 class="text-lg md:text-xl font-bold flex items-center gap-2">
                 <i class="fa-solid fa-layer-group text-blue-400"></i> Nexus AI
             </h1>
@@ -58,7 +56,6 @@
                     <i class="fa-solid fa-database text-blue-400"></i>
                     <span id="db-stats">0</span>
                 </div>
-                <!-- Close Button for Mobile -->
                 <button id="close-sidebar" class="md:hidden text-slate-400 hover:text-white focus:outline-none transition-colors">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
@@ -70,17 +67,17 @@
             <!-- File Upload Section -->
             <div>
                 <h2 class="text-xs md:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 md:mb-3">Upload Media</h2>
-                <p class="text-[11px] md:text-xs text-slate-500 mb-3 md:mb-4">PDF, JPG/PNG, MP3, MP4 (Max 120s).</p>
+                <p class="text-[11px] md:text-xs text-slate-500 mb-3 md:mb-4">PDF, JPG/PNG, MP3, MP4. Multi-select allowed.</p>
                 
                 <form id="file-upload-form" class="space-y-3">
                     <div class="relative border-2 border-dashed border-slate-300 rounded-xl p-4 hover:bg-slate-50 hover:border-blue-400 transition cursor-pointer flex flex-col items-center justify-center text-center group">
                         <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 group-hover:text-blue-500 mb-2 transition"></i>
-                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-600 truncate w-full px-2" id="file-name-display">Choose a file</span>
-                        <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required>
+                        <span class="text-sm font-medium text-slate-600 group-hover:text-blue-600 truncate w-full px-2" id="file-name-display">Choose file(s)</span>
+                        <input type="file" id="file-input" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required>
                     </div>
                     
                     <button type="submit" id="file-btn" class="w-full bg-slate-900 text-white text-sm md:text-base font-medium rounded-lg py-2.5 hover:bg-blue-600 transition duration-200 flex items-center justify-center shadow-sm">
-                        <span id="file-btn-text">Process File</span>
+                        <span id="file-btn-text">Process Files</span>
                         <i id="file-spinner" class="fa-solid fa-circle-notch fa-spin ml-2 hidden"></i>
                     </button>
                 </form>
@@ -89,12 +86,27 @@
 
             <hr class="border-slate-100">
 
+            <!-- Data Management Section -->
+            <div>
+                <h2 class="text-xs md:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">Manage Data</h2>
+                <div id="document-list" class="space-y-2 max-h-40 overflow-y-auto mb-3 pr-1 text-sm text-slate-600 empty:hidden">
+                    <!-- Populated dynamically -->
+                </div>
+                <div id="doc-empty-state" class="text-xs text-slate-400 mb-3 italic">No documents indexed yet.</div>
+                
+                <button id="delete-all-btn" class="w-full bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium rounded-lg py-2.5 transition duration-200 flex items-center justify-center border border-red-200 hidden">
+                    <i class="fa-solid fa-trash-can mr-2"></i> Delete All Data
+                </button>
+            </div>
+
+            <hr class="border-slate-100">
+
             <!-- Text Upload Section -->
             <div>
                 <h2 class="text-xs md:text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 md:mb-3">Add Raw Text</h2>
                 <form id="text-upload-form" class="space-y-3">
-                    <input type="text" id="text-name" placeholder="Document Title" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition" required>
-                    <textarea id="text-content" rows="4" placeholder="Paste your text context here..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition resize-none" required></textarea>
+                    <input type="text" id="text-name" placeholder="Document Title" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                    <textarea id="text-content" rows="4" placeholder="Paste your text context here..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-none" required></textarea>
                     
                     <button type="submit" id="text-btn" class="w-full bg-slate-900 text-white text-sm md:text-base font-medium rounded-lg py-2.5 hover:bg-blue-600 transition duration-200 flex items-center justify-center shadow-sm">
                         <span id="text-btn-text">Ingest Text</span>
@@ -120,18 +132,17 @@
                 </h2>
             </div>
             
-            <!-- Optional: Add a clear chat or settings button here later if needed -->
-            <button class="text-slate-400 hover:text-slate-600 text-sm hidden md:block" onclick="location.reload()" title="Reset Session">
-                <i class="fa-solid fa-arrow-rotate-right"></i>
+            <!-- Clear Chat Button -->
+            <button id="clear-chat-btn" class="text-red-400 hover:text-red-600 text-xs md:text-sm font-medium flex items-center transition-colors px-3 py-1.5 rounded-md hover:bg-red-50" title="Clear Chat Interface">
+                <i class="fa-solid fa-broom mr-1.5"></i> Clear Chat
             </button>
         </header>
 
         <!-- Chat History -->
         <div id="chat-window" class="flex-1 overflow-y-auto p-4 md:p-6 pt-20 md:pt-24 pb-32 md:pb-32 space-y-4 md:space-y-6 scroll-smooth">
-            <!-- Welcome Message -->
-            <div class="flex justify-start">
+            <div class="flex justify-start default-msg">
                 <div class="bg-slate-100 text-slate-800 p-3.5 md:p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[90%] md:max-w-[85%] border border-slate-200 text-sm md:text-sm leading-relaxed">
-                    Hello! I am connected to your Multimodal RAG Database. Upload PDFs, images, audio, video, or text, and then ask me questions about them here.
+                    Hello! I am connected to your Multimodal Database via <b>Groq</b>. Upload any files, and ask me questions!
                 </div>
             </div>
         </div>
@@ -139,62 +150,44 @@
         <!-- Chat Input Area -->
         <div class="absolute bottom-0 w-full bg-gradient-to-t from-white via-white to-transparent pt-6 pb-4 md:pb-6 px-4 md:px-6 z-10">
             <div class="max-w-4xl mx-auto relative shadow-lg rounded-2xl bg-white border border-slate-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all flex items-end">
-                <!-- Text-base used here specifically to prevent iOS Safari auto-zoom -->
                 <textarea id="chat-input" placeholder="Ask anything about your documents..." class="w-full py-3.5 md:py-4 pl-4 pr-12 md:pr-14 rounded-2xl focus:outline-none text-slate-700 bg-transparent text-base resize-none max-h-32 min-h-[52px]" rows="1"></textarea>
                 <button id="send-btn" class="absolute right-2 bottom-2 md:bottom-2 bg-blue-600 text-white w-9 h-9 md:w-10 md:h-10 rounded-xl hover:bg-blue-700 transition flex items-center justify-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                     <i class="fa-solid fa-paper-plane text-sm md:text-base"></i>
                 </button>
             </div>
             <div class="text-center mt-1.5 md:mt-2 text-[10px] md:text-[11px] text-slate-400 px-2 leading-tight">
-                AI can make mistakes. Verify important information from sources.
+                AI powered by Groq. Verify important information.
             </div>
         </div>
     </main>
 
     <script>
-        // --- Password Protection Logic ---
+        // --- Password Logic ---
         document.getElementById('password-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const pwd = document.getElementById('app-password').value;
-            const overlay = document.getElementById('password-overlay');
-            const errorText = document.getElementById('password-error');
-
             if (pwd === 'Nick@123') {
-                overlay.style.opacity = '0';
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                }, 300); // Wait for the fade out transition
+                document.getElementById('password-overlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('password-overlay').style.display = 'none', 300);
             } else {
-                errorText.classList.remove('hidden');
-                document.getElementById('app-password').value = '';
+                document.getElementById('password-error').classList.remove('hidden');
             }
         });
 
-        // API Base URL Setup
         const API_BASE_URL = window.location.port === '8000' ? '' : 'https://smart-personal-ai-chatbot.onrender.com';
 
-        // --- Mobile Sidebar Toggle Logic ---
+        // --- Sidebar Logic ---
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
-        const openSidebarBtn = document.getElementById('open-sidebar');
-        const closeSidebarBtn = document.getElementById('close-sidebar');
-
         function toggleSidebar() {
             const isClosed = sidebar.classList.contains('-translate-x-full');
-            if (isClosed) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-            }
+            sidebar.classList.toggle('-translate-x-full', !isClosed);
+            overlay.classList.toggle('hidden', !isClosed);
         }
-
-        openSidebarBtn.addEventListener('click', toggleSidebar);
-        closeSidebarBtn.addEventListener('click', toggleSidebar);
+        document.getElementById('open-sidebar').addEventListener('click', toggleSidebar);
+        document.getElementById('close-sidebar').addEventListener('click', toggleSidebar);
         overlay.addEventListener('click', toggleSidebar);
 
-        // Auto-resize textarea logic for better mobile chatting
         const chatInput = document.getElementById('chat-input');
         chatInput.addEventListener('input', function() {
             this.style.height = 'auto';
@@ -202,233 +195,171 @@
             if (this.value === '') this.style.height = '52px';
         });
 
-        // Update DB Stats
-        async function updateStats() {
+        // --- Data Management & Refresh ---
+        async function fetchState() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/stats`);
-                if (!res.ok) throw new Error();
-                const data = await res.json();
-                document.getElementById('db-stats').innerText = data.total_documents_indexed;
+                // Fetch stats
+                const statRes = await fetch(`${API_BASE_URL}/api/stats`);
+                const statData = await statRes.json();
+                document.getElementById('db-stats').innerText = statData.total_documents_indexed;
+
+                // Fetch documents list
+                const docRes = await fetch(`${API_BASE_URL}/api/documents`);
+                const docData = await docRes.json();
+                
+                const listEl = document.getElementById('document-list');
+                const emptyEl = document.getElementById('doc-empty-state');
+                const delAllBtn = document.getElementById('delete-all-btn');
+                
+                listEl.innerHTML = '';
+                
+                if(docData.documents.length === 0) {
+                    emptyEl.style.display = 'block';
+                    delAllBtn.classList.add('hidden');
+                } else {
+                    emptyEl.style.display = 'none';
+                    delAllBtn.classList.remove('hidden');
+                    
+                    docData.documents.forEach(doc => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-100';
+                        div.innerHTML = `
+                            <span class="truncate w-4/5" title="${doc}">${doc}</span>
+                            <button onclick="deleteData(['${doc}'])" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
+                        `;
+                        listEl.appendChild(div);
+                    });
+                }
             } catch (err) {
-                console.error("Failed to fetch stats");
+                console.error("Failed to fetch state", err);
             }
         }
-        updateStats();
+        fetchState();
 
-        // Display selected file name
+        async function deleteData(namesArray = []) {
+            if(!confirm(namesArray.length ? `Delete document: ${namesArray[0]}?` : "Delete ALL database files?")) return;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/data`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ names: namesArray })
+                });
+                if(res.ok) fetchState();
+                else alert("Failed to delete.");
+            } catch (e) { alert("Error deleting."); }
+        }
+
+        document.getElementById('delete-all-btn').addEventListener('click', () => deleteData([]));
+
+        // --- Clear Chat ---
+        document.getElementById('clear-chat-btn').addEventListener('click', () => {
+            document.getElementById('chat-window').innerHTML = `
+                <div class="flex justify-start default-msg">
+                    <div class="bg-slate-100 text-slate-800 p-3.5 md:p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[90%] md:max-w-[85%] border border-slate-200 text-sm md:text-sm leading-relaxed">
+                        Chat cleared. How can I help you now?
+                    </div>
+                </div>`;
+        });
+
+        // --- File Upload Multiple ---
         const fileInput = document.getElementById('file-input');
         const fileNameDisplay = document.getElementById('file-name-display');
         fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) {
-                fileNameDisplay.innerText = fileInput.files[0].name;
+            const count = fileInput.files.length;
+            if (count > 0) {
+                fileNameDisplay.innerText = count === 1 ? fileInput.files[0].name : `${count} files selected`;
                 fileNameDisplay.classList.add('text-blue-600', 'font-semibold');
             } else {
-                fileNameDisplay.innerText = 'Choose a file';
+                fileNameDisplay.innerText = 'Choose file(s)';
                 fileNameDisplay.classList.remove('text-blue-600', 'font-semibold');
             }
         });
 
-        // Helper: Show UI Status Message
         function showStatus(elementId, message, isSuccess) {
             const el = document.getElementById(elementId);
-            el.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'bg-red-50', 'text-red-700');
-            el.classList.add(isSuccess ? 'bg-green-50' : 'bg-red-50', isSuccess ? 'text-green-700' : 'text-red-700');
+            el.className = `mt-3 text-sm rounded-lg p-3 ${isSuccess ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`;
             el.innerHTML = `<i class="fa-solid ${isSuccess ? 'fa-circle-check' : 'fa-triangle-exclamation'} mr-1"></i> <span class="break-words">${message}</span>`;
             setTimeout(() => el.classList.add('hidden'), 5000); 
         }
 
-        // Client-Side Video Duration Check
-        function checkVideoDuration(file) {
-            return new Promise((resolve, reject) => {
-                if (!file.type.startsWith('video/')) {
-                    resolve(); 
-                    return;
-                }
-                const video = document.createElement('video');
-                video.preload = 'metadata';
-                video.onloadedmetadata = function() {
-                    window.URL.revokeObjectURL(video.src);
-                    const duration = Math.round(video.duration);
-                    if (duration > 120) {
-                        reject(`Video is ${duration}s. Maximum allowed is 120 seconds.`);
-                    } else {
-                        resolve();
-                    }
-                }
-                video.onerror = function() {
-                    reject("Invalid video file or unable to read metadata.");
-                }
-                video.src = URL.createObjectURL(file);
-            });
-        }
-
-        // Handle File Upload
         document.getElementById('file-upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const file = fileInput.files[0];
-            if (!file) return;
+            if (fileInput.files.length === 0) return;
 
             const btnText = document.getElementById('file-btn-text');
             const spinner = document.getElementById('file-spinner');
             const btn = document.getElementById('file-btn');
             
+            btnText.innerText = "Uploading...";
+            spinner.classList.remove('hidden');
+            btn.disabled = true;
+
             try {
-                btnText.innerText = "Checking...";
-                btn.disabled = true;
-                await checkVideoDuration(file);
-
-                btnText.innerText = "Uploading...";
-                spinner.classList.remove('hidden');
-
                 const formData = new FormData();
-                formData.append('file', file);
+                for(let i=0; i<fileInput.files.length; i++){
+                    formData.append('files', fileInput.files[i]);
+                }
 
                 const res = await fetch(`${API_BASE_URL}/api/upload/file`, { method: 'POST', body: formData });
                 const data = await res.json();
                 
                 if (res.ok) {
                     showStatus('file-status', data.message, true);
-                    updateStats();
+                    fetchState();
                     fileInput.value = ""; 
-                    fileNameDisplay.innerText = 'Choose a file';
+                    fileNameDisplay.innerText = 'Choose file(s)';
                     fileNameDisplay.classList.remove('text-blue-600', 'font-semibold');
-                    
-                    // Close sidebar automatically on mobile after success
-                    if(window.innerWidth < 768) {
-                        setTimeout(toggleSidebar, 1500);
-                    }
-                } else {
-                    throw new Error(data.detail || "Server upload failed");
-                }
-            } catch (err) {
-                showStatus('file-status', err.message || err, false);
-            } finally {
-                btnText.innerText = "Process File";
+                } else throw new Error(data.detail || "Server upload failed");
+            } catch (err) { showStatus('file-status', err.message, false); } 
+            finally {
+                btnText.innerText = "Process Files";
                 spinner.classList.add('hidden');
                 btn.disabled = false;
             }
         });
 
-        // Handle Text Upload
         document.getElementById('text-upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('text-name').value;
-            const text = document.getElementById('text-content').value;
-
-            const btnText = document.getElementById('text-btn-text');
-            const spinner = document.getElementById('text-spinner');
             const btn = document.getElementById('text-btn');
-            
-            btnText.innerText = "Ingesting...";
-            spinner.classList.remove('hidden');
+            document.getElementById('text-btn-text').innerText = "Ingesting...";
+            document.getElementById('text-spinner').classList.remove('hidden');
             btn.disabled = true;
 
             try {
                 const res = await fetch(`${API_BASE_URL}/api/upload/text`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, text })
+                    body: JSON.stringify({ 
+                        name: document.getElementById('text-name').value, 
+                        text: document.getElementById('text-content').value 
+                    })
                 });
                 const data = await res.json();
                 
                 if (res.ok) {
                     showStatus('text-status', data.message, true);
-                    updateStats();
+                    fetchState();
                     document.getElementById('text-name').value = '';
                     document.getElementById('text-content').value = '';
-                    
-                    // Close sidebar automatically on mobile after success
-                    if(window.innerWidth < 768) {
-                        setTimeout(toggleSidebar, 1500);
-                    }
-                } else {
-                    throw new Error(data.detail);
-                }
-            } catch (err) {
-                showStatus('text-status', err.message || "Connection Error", false);
-            } finally {
-                btnText.innerText = "Ingest Text";
-                spinner.classList.add('hidden');
+                } else throw new Error(data.detail);
+            } catch (err) { showStatus('text-status', err.message, false); } 
+            finally {
+                document.getElementById('text-btn-text').innerText = "Ingest Text";
+                document.getElementById('text-spinner').classList.add('hidden');
                 btn.disabled = false;
             }
         });
 
-        // --- Chat Logic ---
+        // --- Chat ---
         const chatWindow = document.getElementById('chat-window');
         const sendBtn = document.getElementById('send-btn');
 
         function appendUserMessage(text) {
-            const wrapper = document.createElement('div');
-            wrapper.className = `flex justify-end`;
-            wrapper.innerHTML = `
-                <div class="bg-blue-600 text-white p-3.5 md:p-4 rounded-2xl rounded-tr-none shadow-sm max-w-[90%] md:max-w-[85%] text-sm leading-relaxed break-words whitespace-pre-wrap">
-                    ${text}
-                </div>
-            `;
-            chatWindow.appendChild(wrapper);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-
-        function createBotMessageContainer() {
-            const wrapper = document.createElement('div');
-            wrapper.className = `flex justify-start`;
-            
-            const bubble = document.createElement('div');
-            bubble.className = `bg-slate-100 text-slate-800 p-3.5 md:p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[95%] md:max-w-[85%] border border-slate-200 text-sm leading-relaxed flex flex-col gap-3 overflow-hidden`;
-            
-            const textContainer = document.createElement('div');
-            textContainer.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
-            
-            bubble.appendChild(textContainer);
-            wrapper.appendChild(bubble);
-            chatWindow.appendChild(wrapper);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            
-            return { wrapper, bubble, textContainer };
-        }
-
-        async function typeWriterEffect(element, text) {
-            element.innerHTML = ''; 
-            const words = text.split(/(\s+)/); 
-            
-            for (let i = 0; i < words.length; i++) {
-                let word = words[i];
-                if (word === '\n' || word.includes('\n')) {
-                    word = word.replace(/\n/g, '<br/>');
-                }
-                
-                element.innerHTML += word;
-                chatWindow.scrollTop = chatWindow.scrollHeight;
-                
-                if (word.trim().length > 0) {
-                    const delay = Math.random() * 15 + 10; 
-                    await new Promise(r => setTimeout(r, delay));
-                }
-            }
-        }
-
-        function appendSources(bubble, sources) {
-            if (!sources || sources.length === 0) return;
-            
-            const sourceDiv = document.createElement('div');
-            sourceDiv.className = "pt-2 md:pt-3 border-t border-slate-200 flex flex-wrap gap-1.5 md:gap-2 mt-1 md:mt-2";
-            
-            sources.forEach(src => {
-                const badge = document.createElement('span');
-                badge.className = "text-[10px] md:text-[11px] font-medium bg-white text-slate-600 px-2 py-1 md:px-2.5 md:py-1 rounded border border-slate-200 flex items-center gap-1 shadow-sm max-w-full";
-                
-                let icon = 'fa-file';
-                if(src.modality === 'video') icon = 'fa-video text-purple-500';
-                else if(src.modality === 'audio') icon = 'fa-music text-yellow-500';
-                else if(src.modality === 'image') icon = 'fa-image text-emerald-500';
-                else if(src.modality === 'pdf') icon = 'fa-file-pdf text-red-500';
-                else if(src.modality === 'text') icon = 'fa-file-lines text-blue-500';
-
-                badge.innerHTML = `<i class="fa-solid ${icon} shrink-0"></i> <span class="truncate" title="${src.name}">${src.name}</span> <span class="text-slate-400 shrink-0">(${(src.score * 100).toFixed(0)}%)</span>`;
-                sourceDiv.appendChild(badge);
-            });
-            
-            bubble.appendChild(sourceDiv);
+            chatWindow.innerHTML += `
+                <div class="flex justify-end">
+                    <div class="bg-blue-600 text-white p-3.5 md:p-4 rounded-2xl rounded-tr-none shadow-sm max-w-[90%] md:max-w-[85%] text-sm leading-relaxed break-words whitespace-pre-wrap">${text}</div>
+                </div>`;
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
@@ -438,12 +369,21 @@
 
             appendUserMessage(question);
             chatInput.value = '';
-            chatInput.style.height = '52px'; // Reset height
+            chatInput.style.height = '52px';
             chatInput.disabled = true;
             sendBtn.disabled = true;
             sendBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
 
-            const botUI = createBotMessageContainer();
+            // Create loading UI
+            const wrapperId = 'msg-' + Date.now();
+            chatWindow.innerHTML += `
+                <div id="${wrapperId}" class="flex justify-start">
+                    <div class="bg-slate-100 text-slate-800 p-3.5 md:p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[95%] md:max-w-[85%] border border-slate-200 text-sm leading-relaxed flex flex-col gap-3">
+                        <div class="msg-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>
+                        <div class="sources-content hidden pt-2 border-t border-slate-200 flex flex-wrap gap-1.5"></div>
+                    </div>
+                </div>`;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
 
             try {
                 const res = await fetch(`${API_BASE_URL}/api/ask`, {
@@ -452,39 +392,35 @@
                     body: JSON.stringify({ question, top_k: 3 })
                 });
                 
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.detail || `Server Error ${res.status}`);
-                }
-                
+                if (!res.ok) throw new Error((await res.json().catch(()=>({}))).detail || 'Server Error');
                 const data = await res.json();
                 
-                await typeWriterEffect(botUI.textContainer, data.answer);
-                appendSources(botUI.bubble, data.sources);
+                // Replace text
+                const el = document.getElementById(wrapperId);
+                el.querySelector('.msg-content').innerHTML = data.answer.replace(/\n/g, '<br/>');
                 
+                // Append Sources
+                if(data.sources && data.sources.length) {
+                    const srcContainer = el.querySelector('.sources-content');
+                    srcContainer.classList.remove('hidden');
+                    data.sources.forEach(src => {
+                        srcContainer.innerHTML += `<span class="text-[10px] bg-white text-slate-600 px-2 py-1 rounded border border-slate-200 shadow-sm"><i class="fa-solid fa-file mr-1"></i>${src.name}</span>`;
+                    });
+                }
             } catch (err) {
-                botUI.textContainer.innerHTML = `<span class="text-red-500 text-xs md:text-sm"><i class="fa-solid fa-circle-exclamation mr-1"></i> Error: ${err.message}.</span>`;
+                document.getElementById(wrapperId).querySelector('.msg-content').innerHTML = `<span class="text-red-500"><i class="fa-solid fa-circle-exclamation mr-1"></i> Error: ${err.message}.</span>`;
             } finally {
                 chatInput.disabled = false;
                 sendBtn.disabled = false;
-                // Don't auto-focus on mobile as it pops up the keyboard disruptively
-                if(window.innerWidth >= 768) {
-                    chatInput.focus();
-                }
                 sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane text-sm md:text-base"></i>';
+                chatWindow.scrollTop = chatWindow.scrollHeight;
             }
         }
 
         sendBtn.addEventListener('click', handleAsk);
-        
-        // Handle Enter key for submission (Shift+Enter for new line)
         chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleAsk();
-            }
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAsk(); }
         });
-
     </script>
 </body>
 </html>
