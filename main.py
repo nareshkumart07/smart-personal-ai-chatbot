@@ -42,7 +42,11 @@ class DeleteRequest(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
     """Serves the main frontend UI."""
-    with open("index.html", "r", encoding="utf-8") as f:
+    # Dynamically get the absolute path to the directory containing main.py
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    html_path = os.path.join(base_dir, "index.html")
+    
+    with open(html_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 @app.post("/api/upload/text")
