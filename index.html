@@ -77,14 +77,15 @@
     <div id="password-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 transition-all duration-500">
         <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-slate-200 transform transition-all scale-100">
             <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-5 text-blue-600 text-2xl shadow-inner border border-blue-200">
-                <i class="fa-solid fa-shield-halved"></i>
+                <i class="fa-solid fa-key"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">Secure Dashboard</h2>
-            <p class="text-slate-500 mb-6 text-sm">Please authenticate to access the Google Embedding 2 Chat bot and Database.</p>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Bring Your Own Keys</h2>
+            <p class="text-slate-500 mb-6 text-sm">Please provide your API keys to initialize the open-source RAG engine. Keys are only kept in your browser session.</p>
             <form id="password-form" class="space-y-4">
-                <input type="password" id="app-password" placeholder="Enter API Password" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-center tracking-widest font-medium text-slate-700 shadow-sm" required>
+                <input type="password" id="gemini-key" placeholder="Gemini API Key (Embeddings/Vision)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-center tracking-widest font-medium text-slate-700 shadow-sm" required>
+                <input type="password" id="groq-key" placeholder="Groq API Key (Fast LLM Generation)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-center tracking-widest font-medium text-slate-700 shadow-sm" required>
                 <button type="submit" id="login-btn" class="w-full bg-slate-900 text-white font-medium rounded-xl py-3.5 hover:bg-blue-600 transition duration-300 shadow-md flex justify-center items-center gap-2">
-                    <span>Unlock System</span>
+                    <span>Initialize System</span>
                     <i id="login-spinner" class="fa-solid fa-circle-notch fa-spin hidden"></i>
                 </button>
                 <div id="password-error" class="bg-red-50 text-red-600 text-sm py-2 px-3 rounded-lg border border-red-200 hidden mt-2">
@@ -145,7 +146,7 @@
             <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm relative">
                 <div class="absolute -left-[1px] top-4 w-[3px] h-6 bg-blue-500 rounded-r-md"></div>
                 <h2 class="text-sm font-bold text-slate-800 mb-1">Multimodal Ingestion</h2>
-                <p class="text-[11px] text-slate-500 mb-3">Upload PDF, JPG, PNG, MP3, MP4 files.</p>
+                <p class="text-[11px] text-slate-500 mb-3">Upload PDF, JPG, PNG, MP3, MP4 files. (Max 50MB total)</p>
                 
                 <form id="file-upload-form" class="space-y-3">
                     <div class="relative border-2 border-dashed border-slate-200 rounded-xl p-4 hover:bg-blue-50/50 hover:border-blue-400 transition cursor-pointer flex flex-col items-center justify-center text-center group">
@@ -168,11 +169,11 @@
             <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm relative">
                 <div class="absolute -left-[1px] top-4 w-[3px] h-6 bg-purple-500 rounded-r-md"></div>
                 <h2 class="text-sm font-bold text-slate-800 mb-1">Direct Text Entry</h2>
-                <p class="text-[11px] text-slate-500 mb-3">Paste raw context or notes.</p>
+                <p class="text-[11px] text-slate-500 mb-3">Paste raw context or notes. (Max 20,000 chars)</p>
                 
                 <form id="text-upload-form" class="space-y-3">
                     <input type="text" id="text-name" placeholder="Document Title" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition shadow-inner" required>
-                    <textarea id="text-content" rows="3" placeholder="Paste context here..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition resize-none shadow-inner" required></textarea>
+                    <textarea id="text-content" rows="3" maxlength="20000" placeholder="Paste context here..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition resize-none shadow-inner" required></textarea>
                     
                     <button type="submit" id="text-btn" class="w-full bg-slate-800 text-white text-sm font-medium rounded-lg py-2.5 hover:bg-purple-600 transition-all duration-200 shadow-sm flex justify-center items-center gap-2">
                         <i class="fa-solid fa-align-left"></i> <span id="text-btn-text">Ingest Text</span>
@@ -275,11 +276,15 @@
     <script>
         // --- State Management ---
         const API_BASE_URL = window.location.port === '8000' ? '' : 'https://smart-personal-ai-chatbot.onrender.com';
-        let appPassword = '';
+        let geminiKey = '';
+        let groqKey = '';
 
         // --- Fetch Wrapper for Authentication ---
         function getHeaders(isJson = true) {
-            const headers = { 'x-app-password': appPassword };
+            const headers = { 
+                'x-gemini-key': geminiKey,
+                'x-groq-key': groqKey 
+            };
             if (isJson) headers['Content-Type'] = 'application/json';
             return headers;
         }
@@ -287,7 +292,8 @@
         // --- Authentication & Initialization ---
         document.getElementById('password-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const pwd = document.getElementById('app-password').value;
+            const gKey = document.getElementById('gemini-key').value;
+            const qKey = document.getElementById('groq-key').value;
             const btn = document.getElementById('login-btn');
             const spinner = document.getElementById('login-spinner');
             const errBox = document.getElementById('password-error');
@@ -299,21 +305,24 @@
             try {
                 // Verify password against backend using the stats endpoint
                 const res = await fetch(`${API_BASE_URL}/api/stats`, {
-                    headers: { 'x-app-password': pwd }
+                    headers: { 'x-gemini-key': gKey, 'x-groq-key': qKey }
                 });
 
                 if (res.ok) {
-                    appPassword = pwd; // Save token on success
+                    geminiKey = gKey;
+                    groqKey = qKey;
                     document.getElementById('password-overlay').classList.add('opacity-0', 'scale-105');
                     setTimeout(() => document.getElementById('password-overlay').style.display = 'none', 500);
                     fetchState(); // Load dashboard data
                 } else {
-                    document.getElementById('pwd-error-text').innerText = "Unauthorized: Invalid API Password";
+                    document.getElementById('pwd-error-text').innerText = "Unauthorized: Invalid Keys Provided";
                     errBox.classList.remove('hidden');
                     // Add shake effect to input
-                    const input = document.getElementById('app-password');
-                    input.classList.add('animate-[shake_0.5s_ease-in-out]');
-                    setTimeout(() => input.classList.remove('animate-[shake_0.5s_ease-in-out]'), 500);
+                    const inputs = [document.getElementById('gemini-key'), document.getElementById('groq-key')];
+                    inputs.forEach(input => {
+                        input.classList.add('animate-[shake_0.5s_ease-in-out]');
+                        setTimeout(() => input.classList.remove('animate-[shake_0.5s_ease-in-out]'), 500);
+                    });
                 }
             } catch (err) {
                 document.getElementById('pwd-error-text').innerText = "Network Error. Is the backend running?";
@@ -358,7 +367,7 @@
 
         // --- Data Management & Refresh ---
         async function fetchState() {
-            if (!appPassword) return; // Guard clause
+            if (!geminiKey || !groqKey) return; // Guard clause
             
             try {
                 // Fetch stats (Vectors)
@@ -457,6 +466,17 @@
         document.getElementById('file-upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (fileInput.files.length === 0) return;
+
+            // Client-side file size limit check (50MB)
+            const MAX_FILE_SIZE_MB = 50;
+            let totalSize = 0;
+            for(let i=0; i<fileInput.files.length; i++){
+                totalSize += fileInput.files[i].size;
+            }
+            if (totalSize > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                showStatus('file-status', `Upload failed: Total file size exceeds ${MAX_FILE_SIZE_MB}MB.`, false);
+                return;
+            }
 
             const btnText = document.getElementById('file-btn-text');
             const spinner = document.getElementById('file-spinner');
