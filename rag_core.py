@@ -7,30 +7,14 @@ from typing import Dict, List, Any
 
 import faiss
 import numpy as np
-from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from pypdf import PdfReader
 import groq
 
-# Load environment variables
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-
-if not GEMINI_API_KEY:
-    raise ValueError("Set GEMINI_API_KEY or GOOGLE_API_KEY in your .env file.")
-if not GROQ_API_KEY:
-    raise ValueError("Set GROQ_API_KEY in your .env file to enable Groq LLM answering.")
-
-# Initialize Clients
-gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-groq_client = groq.Groq(api_key=GROQ_API_KEY)
-
-EMBED_MODEL = os.getenv("EMBED_MODEL", "gemini-embedding-2-preview")
+EMBED_MODEL = "gemini-embedding-2-preview"
 CHAT_MODEL = "gemini-2.5-flash" # Gemini used for Summarizing Images/Videos
-GROQ_MODEL = "llama-3.3-70b-versatile" # Groq used for Fast RAG Q&A
+GROQ_MODEL = "llama-3.1-8b-instant" # Groq used for Fast RAG Q&A
 OUTPUT_DIMENSIONALITY = 1536
 
 # ---------------------------------------------------------------------------
@@ -140,8 +124,9 @@ def extract_pdf_text(file_path: str) -> str:
     pages = [page.extract_text() or "" for page in reader.pages]
     return "\n".join(pages).strip()
 
-def upload_file_and_wait(file_path: str):
+def upload_file_and_wait(file_path: str, gemini_key: str):
     """Uploads file to Gemini and waits if it's a video being processed."""
+    gemini_client = genai.Client(api_key=gemini_key)
     uploaded = gemini_client.files.upload(file=file_path)
     
     if guess_mime_type(file_path).startswith("video/"):
@@ -157,9 +142,10 @@ def upload_file_and_wait(file_path: str):
 # Gemini Interactions (Summarization & Embeddings)
 # ---------------------------------------------------------------------------
 
-def summarize_file_for_rag(file_path: str) -> str:
+def summarize_file_for_rag(file_path: str, gemini_key: str) -> str:
     """Uses Gemini 2.5 Flash to summarize non-text multimodal files into text."""
-    uploaded = upload_file_and_wait(file_path)
+    gemini_client = genai.Client(api_key=gemini_key)
+    uploaded = upload_file_and_wait(file_path, gemini_key)
     prompt = (
         "Create a retrieval-friendly knowledge summary of this file. "
         "If it contains speech, include the transcript and key points. "
@@ -178,9 +164,10 @@ def summarize_file_for_rag(file_path: str) -> str:
         except Exception as e:
             print(f"Failed to delete file from Gemini: {e}")
 
-def embed_texts(texts: List[str], task_type: str) -> List[List[float]]:
+def embed_texts(texts: List[str], task_type: str, gemini_key: str) -> List[List[float]]:
     if not texts:
         return []
+    gemini_client = genai.Client(api_key=gemini_key)
     result = gemini_client.models.embed_content(
         model=EMBED_MODEL,
         contents=texts,
@@ -191,16 +178,16 @@ def embed_texts(texts: List[str], task_type: str) -> List[List[float]]:
     )
     return [item.values for item in result.embeddings]
 
-def embed_query(query: str) -> List[float]:
-    return embed_texts([query], task_type="RETRIEVAL_QUERY")[0]
+def embed_query(query: str, gemini_key: str) -> List[float]:
+    return embed_texts([query], task_type="RETRIEVAL_QUERY", gemini_key=gemini_key)[0]
 
 # ---------------------------------------------------------------------------
 # Ingestion Functions
 # ---------------------------------------------------------------------------
 
-def add_text_document(name: str, text: str, chunk_size: int = 1800, overlap: int = 250) -> None:
+def add_text_document(name: str, text: str, gemini_key: str, chunk_size: int = 1800, overlap: int = 250) -> int:
     chunks = chunk_text(text, chunk_size=chunk_size, overlap=overlap)
-    embeddings = embed_texts(chunks, task_type="RETRIEVAL_DOCUMENT")
+    embeddings = embed_texts(chunks, task_type="RETRIEVAL_DOCUMENT", gemini_key=gemini_key)
 
     for idx, (chunk, vector) in enumerate(zip(chunks, embeddings), start=1):
         add_to_faiss(vector, {
@@ -211,16 +198,16 @@ def add_text_document(name: str, text: str, chunk_size: int = 1800, overlap: int
         })
     return len(chunks)
 
-def add_pdf_document(file_path: str) -> int:
+def add_pdf_document(file_path: str, gemini_key: str) -> int:
     file_path = str(Path(file_path))
     text = extract_pdf_text(file_path)
 
     if text:
-        return add_text_document(Path(file_path).name, text)
+        return add_text_document(Path(file_path).name, text, gemini_key)
 
     # Fallback to multimodal summarization if PDF is scanned/images
-    summary = summarize_file_for_rag(file_path)
-    vector = embed_texts([summary], task_type="RETRIEVAL_DOCUMENT")[0]
+    summary = summarize_file_for_rag(file_path, gemini_key)
+    vector = embed_texts([summary], task_type="RETRIEVAL_DOCUMENT", gemini_key=gemini_key)[0]
     add_to_faiss(vector, {
         "name": Path(file_path).name,
         "modality": "pdf",
@@ -229,7 +216,7 @@ def add_pdf_document(file_path: str) -> int:
     })
     return 1
 
-def add_media_document(file_path: str) -> int:
+def add_media_document(file_path: str, gemini_key: str) -> int:
     """
     Fixed media ingestion: Avoids direct byte embeddings to prevent API errors. 
     Always converts images/video to text summaries first.
@@ -238,15 +225,15 @@ def add_media_document(file_path: str) -> int:
     mime_type = guess_mime_type(file_path)
 
     if mime_type == "application/pdf":
-        return add_pdf_document(file_path)
+        return add_pdf_document(file_path, gemini_key)
 
     if mime_type.startswith("text/"):
         text = Path(file_path).read_text(encoding="utf-8")
-        return add_text_document(Path(file_path).name, text)
+        return add_text_document(Path(file_path).name, text, gemini_key)
 
     # For Images, Audio, and Video: Summarize to text, then embed the text!
-    summary = summarize_file_for_rag(file_path)
-    vector = embed_texts([summary], task_type="RETRIEVAL_DOCUMENT")[0]
+    summary = summarize_file_for_rag(file_path, gemini_key)
+    vector = embed_texts([summary], task_type="RETRIEVAL_DOCUMENT", gemini_key=gemini_key)[0]
 
     add_to_faiss(vector, {
         "name": Path(file_path).name,
@@ -260,11 +247,11 @@ def add_media_document(file_path: str) -> int:
 # Retrieval & Generation (Powered by Groq)
 # ---------------------------------------------------------------------------
 
-def retrieve(query: str, top_k: int = 3) -> List[Dict]:
+def retrieve(query: str, gemini_key: str, top_k: int = 3) -> List[Dict]:
     if faiss_index.ntotal == 0:
         return []
 
-    query_vector = embed_query(query)
+    query_vector = embed_query(query, gemini_key)
     vec = np.array([query_vector], dtype=np.float32)
     faiss.normalize_L2(vec)
 
@@ -279,9 +266,9 @@ def retrieve(query: str, top_k: int = 3) -> List[Dict]:
             })
     return results
 
-def ask_rag(question: str, top_k: int = 3) -> dict:
+def ask_rag(question: str, gemini_key: str, groq_key: str, top_k: int = 3) -> dict:
     """Handles logic for asking a question. Now uses Groq instead of Gemini."""
-    hits = retrieve(question, top_k=top_k)
+    hits = retrieve(question, gemini_key, top_k=top_k)
     
     if not hits:
         return {
@@ -301,6 +288,7 @@ def ask_rag(question: str, top_k: int = 3) -> dict:
     user_prompt = f"Retrieved Context:\n{context_string}\n\nUser Question: {question}"
 
     # Use Groq for fast, open-source LLM generation
+    groq_client = groq.Groq(api_key=groq_key)
     response = groq_client.chat.completions.create(
         model=GROQ_MODEL,
         messages=[
