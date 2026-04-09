@@ -3,10 +3,8 @@
 <p align="center">
 <mark><b>A blazing fast, locally-hosted Retrieval-Augmented Generation (RAG) system</b></mark>
 
-
-
-
 Capable of ingesting <b>text, PDFs, Images, Audio, and Video.</b>
+
 </p>
 
 <p align="center">
@@ -14,16 +12,16 @@ Capable of ingesting <b>text, PDFs, Images, Audio, and Video.</b>
 ·
 <a href="#-getting-started">View Demo</a>
 ·
-<a href="https://www.google.com/search?q=https://github.com/yourusername/multimodal-rag-bot/issues">Report Bug</a>
+<a href="https://www.google.com/search?q=https://github.com/nareshkumart07/smart-personal-ai-chatbot/issues">Report Bug</a>
 ·
-<a href="https://www.google.com/search?q=https://github.com/yourusername/multimodal-rag-bot/issues">Request Feature</a>
+<a href="https://www.google.com/search?q=https://github.com/nareshkumart07/smart-personal-ai-chatbot/issues">Request Feature</a>
 </p>
 
 🌟 Overview
 
 💡 Traditional RAG systems are limited to text. This project introduces a Multimodal RAG pipeline that can understand videos, images, audio, and documents out-of-the-box.
 
-By combining the multimodal capabilities of Google Gemini 2.5 Flash with the lightning-fast inference of Groq (Llama 3) and the lightweight vector search of FAISS, this application allows you to chat with your personal data locally and securely.
+Built using Google's gemini-embedding-2-preview and gemini-2.5-flash models, this unified chatbot empowers you to efficiently interact with diverse data types—including text, PDFs, voice, images, and video—all through a single interface. By combining these multimodal capabilities with the lightning-fast inference of Groq (Llama 3) and the lightweight vector search of FAISS, this application allows you to chat with your personal data locally and securely. You can find the complete source code and contribute on GitHub.
 
 ✨ Key Features
 
@@ -121,8 +119,8 @@ A Groq API Key (Get one here)
 
 Clone the repository
 
-git clone [https://github.com/yourusername/multimodal-rag-bot.git](https://github.com/yourusername/multimodal-rag-bot.git)
-cd multimodal-rag-bot
+git clone [https://github.com/nareshkumart07/smart-personal-ai-chatbot.git](https://github.com/nareshkumart07/smart-personal-ai-chatbot.git)
+cd smart-personal-ai-chatbot
 
 
 Create a virtual environment (Recommended)
