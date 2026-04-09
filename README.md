@@ -8,13 +8,10 @@ Capable of ingesting <b>text, PDFs, Images, Audio, and Video.</b>
 </p>
 
 <p align="center">
-<a href="#-key-features"><strong>Explore the docs »</strong></a>
-·
-<a href="#-getting-started">View Demo</a>
-·
-<a href="https://www.google.com/search?q=https://github.com/nareshkumart07/smart-personal-ai-chatbot/issues">Report Bug</a>
-·
-<a href="https://www.google.com/search?q=https://github.com/nareshkumart07/smart-personal-ai-chatbot/issues">Request Feature</a>
+
+
+<a href="[#-getting-started](https://smart-personal-ai-chatbot.onrender.com)">View Demo</a>
+
 </p>
 
 🌟 Overview
