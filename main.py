@@ -22,13 +22,11 @@ app.add_middleware(
 TEMP_DIR = "temp_uploads"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-# Secure backend password configuration
-APP_PASSWORD = os.getenv("APP_PASSWORD")
-
-def verify_password(x_app_password: str = Header(None)):
-    """Dependency to check the password in headers for secure routes."""
-    if not x_app_password or x_app_password != APP_PASSWORD:
-        raise HTTPException(status_code=401, detail="Unauthorized: Invalid Password")
+def get_api_keys(x_gemini_key: str = Header(None), x_groq_key: str = Header(None)):
+    """Dependency to extract API keys from headers."""
+    if not x_gemini_key or not x_groq_key:
+        raise HTTPException(status_code=401, detail="Unauthorized: Missing API Keys in headers")
+    return {"gemini": x_gemini_key, "groq": x_groq_key}
 
 class TextUpload(BaseModel):
     name: str
@@ -47,17 +45,17 @@ async def serve_frontend():
     with open("index.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
-@app.post("/api/upload/text", dependencies=[Depends(verify_password)])
-async def upload_text(payload: TextUpload):
+@app.post("/api/upload/text")
+async def upload_text(payload: TextUpload, keys: dict = Depends(get_api_keys)):
     """Endpoint to upload raw text."""
     try:
-        chunks_added = rag_core.add_text_document(payload.name, payload.text)
+        chunks_added = rag_core.add_text_document(payload.name, payload.text, keys["gemini"])
         return {"status": "success", "message": f"Added {chunks_added} text chunks.", "total_vectors": rag_core.faiss_index.ntotal}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/upload/file", dependencies=[Depends(verify_password)])
-async def upload_file(files: List[UploadFile] = File(...)):
+@app.post("/api/upload/file")
+async def upload_file(files: List[UploadFile] = File(...), keys: dict = Depends(get_api_keys)):
     """Endpoint to upload multiple PDFs, Images, Audio, and Video files."""
     total_items = 0
     try:
@@ -69,7 +67,7 @@ async def upload_file(files: List[UploadFile] = File(...)):
                 shutil.copyfileobj(file.file, buffer)
                 
             # Process the file based on its type using the RAG core
-            items_added = rag_core.add_media_document(file_path)
+            items_added = rag_core.add_media_document(file_path, keys["gemini"])
             total_items += items_added
             
             # Clean up immediately after processing
@@ -84,23 +82,23 @@ async def upload_file(files: List[UploadFile] = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/ask", dependencies=[Depends(verify_password)])
-async def ask_question(query: Query):
+@app.post("/api/ask")
+async def ask_question(query: Query, keys: dict = Depends(get_api_keys)):
     """Endpoint to ask a question to the RAG system using Groq."""
     try:
-        result = rag_core.ask_rag(query.question, top_k=query.top_k)
+        result = rag_core.ask_rag(query.question, keys["gemini"], keys["groq"], top_k=query.top_k)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/documents", dependencies=[Depends(verify_password)])
-async def get_documents():
+@app.get("/api/documents")
+async def get_documents(keys: dict = Depends(get_api_keys)):
     """Returns a list of unique document names currently in the database."""
     docs = list(set([meta["name"] for meta in rag_core.metadata_store.values()]))
     return {"documents": docs}
 
-@app.delete("/api/data", dependencies=[Depends(verify_password)])
-async def delete_data(req: DeleteRequest):
+@app.delete("/api/data")
+async def delete_data(req: DeleteRequest, keys: dict = Depends(get_api_keys)):
     """Deletes specific documents by name, or all data if list is empty."""
     try:
         if not req.names:
@@ -112,8 +110,8 @@ async def delete_data(req: DeleteRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/stats", dependencies=[Depends(verify_password)])
-async def get_stats():
+@app.get("/api/stats")
+async def get_stats(keys: dict = Depends(get_api_keys)):
     """Returns database stats."""
     return {"total_documents_indexed": rag_core.faiss_index.ntotal}
 
