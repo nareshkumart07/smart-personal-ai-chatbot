@@ -1,71 +1,115 @@
-<h3 align="center">Open-Source Multimodal RAG Chatbot</h3>
+<h1 align="center">🌐 Open-Source Multimodal RAG Chatbot</h1>
 
 <p align="center">
-A blazing fast, locally-hosted Retrieval-Augmented Generation (RAG) system capable of ingesting text, PDFs, Images, Audio, and Video.
+<mark><b>A blazing fast, locally-hosted Retrieval-Augmented Generation (RAG) system</b></mark>
 
 
 
 
-
-
-
-<a href="#features"><strong>Explore the docs »</strong></a>
-
-
-
-
-
-
-
-<a href="#installation">View Demo</a>
-.
-<a href="https://www.google.com/search?q=https://github.com/yourusername/multimodal-rag-bot/issues">Report Bug</a>
-.
-<a href="https://www.google.com/search?q=https://github.com/yourusername/multimodal-rag-bot/issues">Request Feature</a>
+Capable of ingesting <b>text, PDFs, Images, Audio, and Video.</b>
 </p>
+
+<p align="center">
+<a href="#-key-features"><strong>Explore the docs »</strong></a>
+·
+<a href="#-getting-started">View Demo</a>
+·
+<a href="https://www.google.com/search?q=https://github.com/yourusername/multimodal-rag-bot/issues">Report Bug</a>
+·
+<a href="https://www.google.com/search?q=https://github.com/yourusername/multimodal-rag-bot/issues">Request Feature</a>
 </p>
 
 🌟 Overview
 
-<p align="center">
-<img src="https://www.google.com/search?q=https://placehold.co/900x450/1e293b/ffffff%3Ftext%3DDashboard%2BScreenshot%2BHere" alt="Dashboard Preview" width="100%">
-</p>
+💡 Traditional RAG systems are limited to text. This project introduces a Multimodal RAG pipeline that can understand videos, images, audio, and documents out-of-the-box.
 
-Traditional RAG systems are limited to text. This project introduces a Multimodal RAG pipeline that can understand videos, images, audio, and documents.
-
-By combining the multimodal capabilities of Google Gemini 2.5 Flash with the lightning-fast inference of Groq (Llama 3) and the lightweight vector search of FAISS, this app allows you to chat with your personal data locally and securely.
+By combining the multimodal capabilities of Google Gemini 2.5 Flash with the lightning-fast inference of Groq (Llama 3) and the lightweight vector search of FAISS, this application allows you to chat with your personal data locally and securely.
 
 ✨ Key Features
 
-🎥 Multimodal Ingestion: Upload MP4s, MP3s, JPGs, PNGs, PDFs, and raw text.
+Feature
 
-⚡ Blazing Fast Answers: Powered by Groq's LPU inference engine running Llama 3 models for instant responses.
+Description
 
-🔐 Bring Your Own Key (BYOK): No backend environment variables required. Input your API keys securely in the browser session.
+🎥 Multimodal Ingestion
 
-🧠 Smart Media Translation: Automatically transcodes and summarizes video/audio using Gemini before embedding, bridging the gap between multimodal files and text-based LLMs.
+Upload MP4s, MP3s, JPGs, PNGs, PDFs, and raw text seamlessly.
 
-💾 Local Vector Store: Uses FAISS for CPU-friendly, local vector similarity search. No expensive cloud database needed.
+⚡ Blazing Fast Answers
 
-🎨 Beautiful UI: Responsive, Tailwind CSS-powered dashboard with real-time markdown rendering and smart source citations.
+Powered by Groq's LPU inference engine running Llama 3 models for near-instant responses.
 
-🏗️ Architecture
+🔐 Bring Your Own Key (BYOK)
 
-Ingestion: Files are uploaded via the FastAPI backend.
+No backend .env variables required. Input your API keys securely right in the browser session.
 
-Translation: Non-text files (Images/Video/Audio) are passed to gemini-2.5-flash to generate a highly detailed textual summary and transcript.
+🧠 Smart Media Translation
 
-Embedding: The text (or generated summary) is chunked and vectorized using gemini-embedding-2-preview.
+Automatically transcodes and summarizes video/audio using Gemini before embedding, bridging the gap between multimodal files and text-based LLMs.
 
-Storage: Vectors and metadata are stored locally in a FAISS index (faiss_index.bin).
+💾 Local Vector Store
 
-Retrieval & Generation: User queries are embedded, matched against the FAISS index, and the relevant context is passed to llama-3 via Groq for a lightning-fast, highly accurate answer.
+Uses FAISS for CPU-friendly, local vector similarity search. No expensive cloud database needed.
+
+🎨 Beautiful UI
+
+Responsive, Tailwind CSS-powered dashboard featuring real-time markdown rendering and smart source citations.
+
+🏗️ Architecture Pipeline
+
+Step
+
+Phase
+
+What Happens
+
+Technology Used
+
+1
+
+📥 Ingestion
+
+Files are uploaded securely via the local backend.
+
+FastAPI
+
+2
+
+🔄 Translation
+
+Non-text files (Images/Video/Audio) generate highly detailed textual summaries and transcripts.
+
+gemini-2.5-flash
+
+3
+
+🧩 Embedding
+
+The text (or generated summary) is chunked and vectorized.
+
+gemini-embedding-2
+
+4
+
+🗄️ Storage
+
+Vectors and metadata are stored locally.
+
+FAISS
+
+5
+
+💬 Retrieval
+
+User queries are embedded, matched against the index, and passed to the LLM for a highly accurate answer.
+
+Groq + Llama 3
 
 🚀 Getting Started
 
 Follow these steps to get the project running on your local machine.
 
-Prerequisites
+📋 Prerequisites
 
 Python 3.9+
 
@@ -73,7 +117,7 @@ A Google Gemini API Key (Get one here)
 
 A Groq API Key (Get one here)
 
-Installation
+⚙️ Installation
 
 Clone the repository
 
@@ -100,31 +144,55 @@ uvicorn main:app --reload
 Open the Application
 Navigate to http://localhost:8000 in your web browser.
 
-💻 Usage
+💻 Usage Guide
 
-<p align="center">
-<img src="https://www.google.com/search?q=https://placehold.co/600x300/1e293b/ffffff%3Ftext%3DBYOK%2BLogin%2BScreen" alt="Login Preview" width="80%">
-</p>
+🛡️ Privacy First: Your API keys are strictly kept in your local browser storage and cleared upon exit.
 
-Initialize the System: Upon opening the app, you will be prompted to enter your Gemini and Groq API keys. These are stored locally in your browser memory and passed securely via headers.
+Action
 
-Upload Data: Use the left sidebar to upload media files (Max 50MB) or paste raw text (Max 20,000 characters).
+Instructions
 
-Chat: Ask questions in the main chat window. The bot will cite its sources based on the exact documents and media you uploaded.
+🔑 Initialize
 
-Manage Database: You can view indexed documents, clear specific files, or purge the entire FAISS database directly from the sidebar.
+Upon opening the app, prompt your Gemini and Groq API keys to initialize the engine.
+
+📂 Upload Data
+
+Use the left sidebar to upload media files (<mark>Max 50MB</mark>) or paste raw text (<mark>Max 20,000 chars</mark>).
+
+💬 Chat
+
+Ask questions in the main chat window. The bot will cite its sources based on the exact documents and media you uploaded.
+
+🗃️ Manage Database
+
+View indexed documents, clear specific files, or purge the entire FAISS database directly from the sidebar.
 
 🛠️ Tech Stack
 
-Frontend: HTML5, Tailwind CSS, Vanilla JavaScript, Marked.js
+Domain
 
-Backend: FastAPI, Python, Pydantic
+Technologies
 
-Vector Store: FAISS (Facebook AI Similarity Search)
+Frontend
 
-Embeddings & Vision: Google Gemini API (gemini-embedding-2-preview, gemini-2.5-flash)
+HTML5, Tailwind CSS, Vanilla JavaScript, Marked.js
 
-LLM Inference: Groq API (llama-3.1-8b-instant)
+Backend
+
+FastAPI, Python, Pydantic
+
+Vector Store
+
+FAISS (Facebook AI Similarity Search)
+
+Embeddings & Vision
+
+Google Gemini API
+
+LLM Inference
+
+Groq API
 
 🤝 Contributing
 
@@ -143,7 +211,3 @@ Open a Pull Request
 📝 License
 
 Distributed under the MIT License. See LICENSE for more information.
-
-<p align="center">
-Built with ❤️ by <a href="https://github.com/yourusername">Your Name</a>
-</p>
