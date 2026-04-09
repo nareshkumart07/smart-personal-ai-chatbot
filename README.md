@@ -10,7 +10,7 @@ Capable of ingesting <b>text, PDFs, Images, Audio, and Video.</b>
 <p align="center">
 
 
-<a href="[#-getting-started](https://smart-personal-ai-chatbot.onrender.com)">View Demo</a>
+<a href="(https://smart-personal-ai-chatbot.onrender.com)">View Demo</a>
 
 </p>
 
