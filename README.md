@@ -1,16 +1,15 @@
 <div align="center">
 
-# 🌐 Open-Source Multimodal RAG Chatbot
+# 🌐 Multimodal RAG Chatbot
 
-**A blazing fast, locally-hosted Retrieval-Augmented Generation (RAG) system**<br/>
-capable of ingesting **Text, PDFs, Images, Audio, and Video.**
+**A single-user Retrieval-Augmented Generation (RAG) demonstration**<br/>
+for **Text, PDFs, Images, Audio, and Video**, using a FastAPI backend, a local FAISS index, and external Gemini and Groq APIs.
 
 <br/>
 
-[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![FAISS](https://img.shields.io/badge/FAISS-Vector%20Store-009688?style=for-the-badge)](https://faiss.ai)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 <br/>
 
@@ -23,9 +22,11 @@ capable of ingesting **Text, PDFs, Images, Audio, and Video.**
 
 ## 🌟 Overview
 
-Traditional RAG systems are limited to text. This project introduces a **Multimodal RAG pipeline** that understands videos, images, audio, and documents out-of-the-box.
+This project demonstrates document ingestion, retrieval, and question answering in one interface. Text and text-based PDFs are extracted and chunked; images, audio, video, and scanned PDFs are sent to Gemini for a textual summary. Gemini creates embeddings, FAISS searches a local index, and Groq generates an answer from the retrieved context.
 
-Built using **Google's `gemini-embedding-2-preview`** and **`gemini-2.5-flash`** models, this unified chatbot lets you interact with diverse data types — text, PDFs, voice, images, and video — all through a single interface. By combining multimodal capabilities with the lightning-fast inference of **Groq (Llama 3)** and the lightweight vector search of **FAISS**, you can chat with your personal data **locally and securely**.
+**Local storage does not mean local-only processing.** Document text, media, summaries, questions, and retrieved context are sent to the relevant external model providers. Internet access and API credentials are required. The current application has one shared document store and is intended for a trusted single-user demonstration, not a private multi-user service.
+
+The implementation demonstrates FastAPI endpoints, overlapping text chunks, normalized vector search with removable IDs, disk persistence, source metadata, and a browser client. No retrieval-quality, latency, or answer-accuracy benchmark is published in this repository.
 
 ---
 
@@ -41,27 +42,27 @@ Built using **Google's `gemini-embedding-2-preview`** and **`gemini-2.5-flash`**
   <tbody>
     <tr>
       <td>🎥 <strong>Multimodal Ingestion</strong></td>
-      <td>Upload <code>MP4</code>, <code>MP3</code>, <code>JPG</code>, <code>PNG</code>, <code>PDF</code>, and raw text seamlessly.</td>
+      <td>Ingest <code>MP4</code>, <code>MP3</code>, <code>JPG</code>, <code>PNG</code>, <code>PDF</code>, and raw text, subject to provider support and limits.</td>
     </tr>
     <tr>
-      <td>⚡ <strong>Blazing Fast Answers</strong></td>
-      <td>Powered by Groq's LPU inference engine running Llama 3 for near-instant responses.</td>
+      <td>💬 <strong>Context-Based Answers</strong></td>
+      <td>Groq generates answers from retrieved text. Latency and answer quality depend on the data, retrieval, and external APIs.</td>
     </tr>
     <tr>
       <td>🔐 <strong>Bring Your Own Key (BYOK)</strong></td>
-      <td>No backend <code>.env</code> required. Input API keys securely in the browser session.</td>
+      <td>Enter provider keys in the browser. The client sends them to the backend in request headers; they are not application login credentials.</td>
     </tr>
     <tr>
       <td>🧠 <strong>Smart Media Translation</strong></td>
-      <td>Automatically transcodes and summarizes video/audio using Gemini before embedding.</td>
+      <td>Gemini summarizes media into text before embedding; the application does not implement a media transcoding pipeline.</td>
     </tr>
     <tr>
       <td>💾 <strong>Local Vector Store</strong></td>
-      <td>Uses FAISS for CPU-friendly, local similarity search — no expensive cloud database needed.</td>
+      <td>Uses FAISS for local similarity search and JSON for source text and metadata. All requests share this store.</td>
     </tr>
     <tr>
       <td>🎨 <strong>Beautiful UI</strong></td>
-      <td>Responsive Tailwind CSS dashboard with real-time markdown rendering and smart source citations.</td>
+      <td>Tailwind CSS dashboard with Markdown rendering and retrieved source names and similarity scores. Generated citations still require verification.</td>
     </tr>
   </tbody>
 </table>
@@ -83,7 +84,7 @@ Built using **Google's `gemini-embedding-2-preview`** and **`gemini-2.5-flash`**
     <tr>
       <td align="center"><strong>1</strong></td>
       <td>📥 <strong>Ingestion</strong></td>
-      <td>Files are uploaded securely via the local backend.</td>
+      <td>Files are uploaded to the FastAPI backend; media may then be uploaded to Gemini.</td>
       <td><code>FastAPI</code></td>
     </tr>
     <tr>
@@ -95,19 +96,19 @@ Built using **Google's `gemini-embedding-2-preview`** and **`gemini-2.5-flash`**
     <tr>
       <td align="center"><strong>3</strong></td>
       <td>🧩 <strong>Embedding</strong></td>
-      <td>Text or generated summary is chunked and vectorized.</td>
-      <td><code>gemini-embedding-2</code></td>
+      <td>Extracted text is chunked and vectorized; a media summary is embedded as one record.</td>
+      <td><code>gemini-embedding-2-preview</code></td>
     </tr>
     <tr>
       <td align="center"><strong>4</strong></td>
       <td>🗄️ <strong>Storage</strong></td>
-      <td>Vectors and metadata are stored locally.</td>
+      <td>Vectors and source-text metadata are persisted on the backend host in a shared store.</td>
       <td><code>FAISS</code></td>
     </tr>
     <tr>
       <td align="center"><strong>5</strong></td>
       <td>💬 <strong>Retrieval</strong></td>
-      <td>User queries are embedded, matched against the index, and passed to the LLM.</td>
+      <td>Gemini embeds the question; FAISS retrieves context; Groq receives the question and retrieved text.</td>
       <td><code>Groq + Llama 3</code></td>
     </tr>
   </tbody>
@@ -119,9 +120,10 @@ Built using **Google's `gemini-embedding-2-preview`** and **`gemini-2.5-flash`**
 
 ### 📋 Prerequisites
 
-- Python **3.9** or higher
+- A Python environment compatible with the packages in `requirements.txt` (Python **3.11** is a practical starting point; dependencies are currently unpinned)
 - A **Google Gemini API Key** — [Get one here](https://aistudio.google.com/app/apikey)
 - A **Groq API Key** — [Get one here](https://console.groq.com)
+- Internet access and provider access/quota for the configured models
 
 ---
 
@@ -161,24 +163,28 @@ source venv/bin/activate
 **3. Install dependencies**
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 **4. Run the FastAPI server**
 
 ```bash
-uvicorn main:app --reload
+python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 **5. Open the Application**
 
-Navigate to `http://localhost:8000` in your browser.
+Navigate to `http://127.0.0.1:8000` in your browser. Run the command from the repository root so the persisted data and temporary-upload paths are predictable. FastAPI also exposes its API documentation at `http://127.0.0.1:8000/docs`.
+
+**Keep port 8000 for this local setup.** The current frontend uses same-origin API requests only on port 8000; on other ports it targets the hosted Render backend. Opening `index.html` directly is not an equivalent local setup. `--reload` is for development, and the shared file-backed index should not be run with multiple workers.
+
+The model IDs are configured in `rag_core.py`: `gemini-embedding-2-preview`, `gemini-2.5-flash`, and `llama-3.1-8b-instant`, with 1,536-dimensional embeddings. Check availability in your provider account before use. If the embedding model or dimensionality changes, rebuild the stored index rather than mixing incompatible embeddings.
 
 ---
 
 ## 💻 Usage Guide
 
-> 🛡️ **Privacy First:** Your API keys are strictly kept in your local browser session and cleared upon exit.
+> **Data flow:** The frontend holds keys in page memory and sends them to the backend, which uses them to call Gemini and Groq. They are not confined to the browser. Use non-sensitive sample data for this demonstration; the hosted instance has no per-user document isolation.
 
 <table>
   <thead>
@@ -187,24 +193,38 @@ Navigate to `http://localhost:8000` in your browser.
   <tbody>
     <tr>
       <td>🔑 <strong>Initialize</strong></td>
-      <td>Enter your Gemini and Groq API keys to initialize the engine.</td>
+      <td>Enter your Gemini and Groq API keys. The initial stats request checks only that both headers are present; a successful initialization does not validate provider credentials.</td>
     </tr>
     <tr>
       <td>📂 <strong>Upload Data</strong></td>
-      <td>Upload media files <strong>(Max 50MB)</strong> or paste raw text <strong>(Max 20,000 chars)</strong> from the sidebar.</td>
+      <td>Upload media files or paste raw text from the sidebar. The browser applies a 50 MB combined upload check and a 20,000-character text-field limit; these are not server-enforced limits.</td>
     </tr>
     <tr>
       <td>💬 <strong>Chat</strong></td>
-      <td>Ask questions in the chat window. The bot cites sources from your uploaded documents.</td>
+      <td>Ask questions in the chat window. The response includes retrieved source metadata; compare the generated answer with the original source.</td>
     </tr>
     <tr>
       <td>🗃️ <strong>Manage Database</strong></td>
-      <td>View indexed documents, clear specific files, or purge the entire FAISS database from the sidebar.</td>
+      <td>View indexed documents, remove documents by name, or clear the shared FAISS database. These actions affect the entire instance, not an individual user.</td>
     </tr>
   </tbody>
 </table>
 
 ---
+
+## Data Storage and Deployment Boundaries
+
+- `faiss_index.bin` contains persisted vectors; `metadata.json` contains names, modalities, chunk IDs, and source text or summaries. Both files are included in this repository. Treat them as demonstration data and review the indexed contents before adding new material.
+- `temp_uploads/` receives uploaded files. Successful processing removes the local temporary file; failures may leave files behind. Gemini file deletion is attempted after summarization, but it is not a guarantee of deletion from all provider systems.
+- The API currently checks only for non-empty provider-key headers. There are no user accounts, ownership checks, or separate user indexes. Listing, retrieval, and deletion operate on the shared store.
+- A hosted multi-user deployment needs application authentication, per-user authorization and storage, server-side size/type limits, safe generated upload filenames, reliable cleanup, provider timeouts, rate limits, and controlled concurrent writes. The current permissive CORS policy also needs review for the intended deployment.
+- The browser loads scripts, styles, and fonts from external CDNs. The application is not an offline or fully self-contained system.
+
+## Validation and Evaluation
+
+For a local smoke check, use a small non-sensitive text document with a distinctive fact, upload it, ask a directly supported question, inspect the returned source, restart the server to check persistence, and delete only that sample document. This workflow requires working API credentials and may incur provider charges.
+
+Before presenting quantitative results, publish a fixed question-and-answer dataset, retrieval settings, model versions, retrieval recall, grounded-answer checks, latency, and estimated per-query cost. These measurements have not yet been reported here; source labels and similarity scores alone do not establish answer correctness.
 
 ## 🛠️ Tech Stack
 
@@ -251,7 +271,7 @@ Navigate to `http://localhost:8000` in your browser.
 
 ## 🤝 Contributing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Issues and pull requests are welcome. Include a reproducible example and describe how the change was checked. Do not include API keys or sensitive documents in reports.
 
 1. Fork the repository
 2. Create your feature branch: `git checkout -b feature/AmazingFeature`
@@ -263,10 +283,10 @@ Contributions are what make the open-source community such an amazing place to l
 
 ## 📄 License
 
-Distributed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+No license file is currently included in this repository. A license needs to be added by the repository owner before reuse permissions can be stated.
 
 ---
 
 <div align="center">
-  <em>Built for developers who want powerful, private, and multimodal AI — without the cloud dependency.</em>
+  <em>A practical multimodal RAG demonstration with local retrieval storage and external model APIs.</em>
 </div>
